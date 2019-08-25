@@ -7,9 +7,11 @@ const mongoose = require('mongoose');
 const passport = require('passport');
 const db = require('./config/mongo');
 
+
 const indexRouter = require('./routes/index');
 const authRouter = require('./routes/auth');
 const usersRouter = require('./routes/users');
+var itemRouter = require('./routes/items');
   
 require('./config/passport')(passport);
 
@@ -35,6 +37,8 @@ app.use(passport.session());
 app.use('/', indexRouter);
 app.use('/auth', authRouter);
 app.use('/users', passport.authenticate('jwt', {session: false}), usersRouter);
+app.use('/items', passport.authenticate('jwt', {session: false}), itemRouter);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

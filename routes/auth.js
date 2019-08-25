@@ -4,6 +4,9 @@ const passport = require('passport');
 const User = require('../models/user');
 const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
+const config = require('../config/keys')
+const nodemailer = require('nodemailer');
+
 
 router.get('/', function(req, res, next) {
   User.find()
@@ -28,6 +31,15 @@ router.post('/register', (req, res) => {
     .then(user => {
       res.json(user);
     })
+    .catch(error => {
+      if(error.code == 11000){
+        res.json({
+          success:false,
+          errorCode: error.code,
+          errorMsg: email + " is already in use."
+        })
+      }
+    })
     .catch(err => console.log(err))
   }))
 })
@@ -35,9 +47,35 @@ router.post('/register', (req, res) => {
 router.post('/login', (req, res, next) =>{
   passport.authenticate('local', function(err, user, info) {
     if(err) throw err
-    const token = jwt.sign(user.toJSON(), 'onemilliondollar');
+    const token = jwt.sign(user.toJSON(), config.authSecret);
     return res.json({user, token});
   })(req, res, next);
+})
+
+router.post('/verify', (req, res, next) =>{
+  var transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+           user: 'elmirnicolas@gmail.com',
+           pass: 'Codeatbath1'
+       }
+})
+
+const mailOptions = {
+  name: "Nick",
+  from: 'elmirnicolas@email.com', 
+  to: req.body.email,
+  subject: 'Hello Test', 
+  html: '<p>Your html here</p>'
+};
+
+transporter.sendMail(mailOptions, function (err, info) {
+  if(err)
+    res.send(err)
+  else
+    res.send(info);
+});
+
 })
 
 module.exports = router;
